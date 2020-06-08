@@ -30,6 +30,8 @@ class Effects
 
 		void reload();
 		void load();
+		std::string toString(Effect effect);
+		std::string toString(std::string id);
 		Effect* getByID(std::string id);
 		Position getOffsetPos(json offset);
 		

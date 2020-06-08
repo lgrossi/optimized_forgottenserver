@@ -20,8 +20,39 @@ void Effects::load()
 {
 		// cache effects JSON file
 		if (!effectsJSON.is_object()) {
-			effectsJSON = JSONParser::openFile(Effects::JSON_FILE_NAME);
+			effectsJSON = JSONParser::readFromFile(Effects::JSON_FILE_NAME);
 		}
+}
+
+std::string Effects::toString(Effect effect) {
+	std::string str;
+	str.reserve(128);
+
+	str.append("This effect has ")
+		.append(std::to_string(effect.size()))
+		.append(" pieces")
+		.append("\n");
+
+	for (auto const& effectPiece : effect) {
+		str.append("\nPiece: ")
+			.append(std::to_string(effectPiece.id))
+			.append("\nOffset: ")
+			.append("x: ").append(std::to_string(effectPiece.offset.x))
+			.append(" y: ").append(std::to_string(effectPiece.offset.y))
+			.append(" z: ").append(std::to_string(effectPiece.offset.z))
+			.append("\nChildren: [ ");
+		
+		for (auto const& childId : effectPiece.childrenIds) {
+			str.append(std::to_string(childId)).append(" ");
+		}
+
+		str.append("]\n");
+	}
+	return str;
+}
+
+std::string Effects::toString(std::string id) {
+	return toString(*getByID(id));
 }
 
 Effect* Effects::getByID(std::string id)
