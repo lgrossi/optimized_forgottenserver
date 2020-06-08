@@ -16,25 +16,23 @@ class JSONParser
 		static constexpr const char* JSON_PATH = "data/JSON/";
 		static constexpr const char* JSON_FORMAT = ".json";
 
-    static json openFile(std::string fileName) {
-			json j;
-			try
-			{
+    static json readFromFile(std::string fileName) {
+			try {
 				std::ifstream ifStream(JSONParser::generateFilePath(fileName));
-				ifStream >> j;
+				json j = json::parse(ifStream);
+				ifStream.close();
 				return j;
 			}
-			catch(const std::exception& e)
-			{
+			catch(const std::exception& e) {
 				std::string str;
 				str.reserve(128);
-				str.append("Error - JSONParser::openFile ")
+				str.append("Error - JSONParser::readFromFile ")
 					.append(JSON_PATH)
 					.append(fileName)
 					.append(JSON_FORMAT)
 					.append(" not found.");
 				std::cerr << str << std::endl;
-				return j;
+				return json();
 			}
 		};
 
