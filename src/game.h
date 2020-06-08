@@ -32,6 +32,7 @@
 #include "npc.h"
 #include "wildcardtree.h"
 #include "quests.h"
+#include "effects/effects.hpp"
 
 class ServiceManager;
 class Creature;
@@ -547,6 +548,7 @@ class Game
 		Mounts mounts;
 		Raids raids;
 		Quests quests;
+		Effects effects;
 
 	private:
 		bool playerSaySpell(Player* player, SpeakClasses type, const std::string& text);

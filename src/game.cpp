@@ -129,6 +129,8 @@ void Game::setGameState(GameState_t newState)
 			loadMotdNum();
 			loadPlayersRecord();
 
+			effects.load();
+
 			g_globalEvents->startup();
 			break;
 		}
@@ -5780,6 +5782,7 @@ bool Game::reload(ReloadTypes_t reloadType)
 			#if GAME_FEATURE_MOUNTS > 0
 			mounts.reload();
 			#endif
+			effects.reload();
 			g_globalEvents->reload();
 			g_events->load();
 			g_chat->load();
