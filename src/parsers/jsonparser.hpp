@@ -32,7 +32,7 @@ class JSONParser
 					.append(JSON_PATH)
 					.append(fileName)
 					.append(JSON_FORMAT)
-					.append(" not found in ");
+					.append(" not found.");
 				std::cerr << str << std::endl;
 				return j;
 			}
