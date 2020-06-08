@@ -283,4 +283,6 @@
 #define GAME_FEATURE_PARTY_LIST 1
 #endif
 
+#define GAME_FEATURE_SPLITTED_EFFECTS 1
+
 #endif
