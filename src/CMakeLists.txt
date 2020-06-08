@@ -77,5 +77,7 @@ set(tfs_SRC
 	${CMAKE_CURRENT_LIST_DIR}/waitlist.cpp
 	${CMAKE_CURRENT_LIST_DIR}/weapons.cpp
 	${CMAKE_CURRENT_LIST_DIR}/wildcardtree.cpp
+	${CMAKE_CURRENT_LIST_DIR}/effects/effects.cpp
+	${CMAKE_CURRENT_LIST_DIR}/parsers/jsonparser.hpp
 	PARENT_SCOPE)
 
