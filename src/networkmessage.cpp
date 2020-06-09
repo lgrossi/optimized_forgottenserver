@@ -101,3 +101,41 @@ void NetworkMessage::addItemId(uint16_t itemId)
 {
 	add<uint16_t>(Item::items[itemId].clientId);
 }
+
+void NetworkMessage::addEffect(Effect effect) {
+	add<uint16_t>(effect.getId());
+
+	Pieces pieces = effect.getPieces();
+	addByte(pieces.size()); // for now it's always 4
+	for (auto const& effectPiece : pieces) {
+		add<uint16_t>(effectPiece.id);
+		addByte(effectPiece.childrenIds.size());
+
+		for (auto const& id: effectPiece.childrenIds) {
+			add<uint16_t>(id);
+		}
+
+		addPosition(effectPiece.offset);
+	}
+}
+
+Effect NetworkMessage::getEffect()
+{	
+	Effect effect;
+
+	effect.setId(get<uint16_t>()); // effect type
+	uint8_t effectSize = getByte();
+	for (uint8_t i = 0; i < effectSize; i++) {
+		EffectPiece effectPiece;
+
+		effectPiece.id = get<uint16_t>();
+		uint8_t childrenSize = getByte();
+		for (uint8_t j = 0; j < childrenSize; j++) {
+			effectPiece.childrenIds.emplace_back(get<uint16_t>());
+		}
+		effectPiece.offset = getPosition();
+
+		effect.addPiece(effectPiece);
+	}
+	return effect;
+}
