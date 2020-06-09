@@ -37,6 +37,7 @@
 #include "ban.h"
 #include "scheduler.h"
 #include "spells.h"
+#include "effects/effects.hpp"
 
 extern ConfigManager g_config;
 extern Actions actions;
@@ -289,7 +290,7 @@ void ProtocolGame::onRecvFirstMessage(NetworkMessage& msg)
 	OperatingSystem_t TFCoperatingSystem = static_cast<OperatingSystem_t>(msg.getByte());
 	version = msg.get<uint16_t>();
 	if (version >= 1111) {
-		setChecksumMethod(CHECKSUM_METHOD_SEQUENCE);
+		setChecksumMethod(CHECKSUM_METHOD_ADLER32);
 		if (TFCoperatingSystem < CLIENTOS_TFC_ANDROID) {
 			//compression on the forgotten client will be implemented in the next client update
 			enableCompression();
@@ -3545,21 +3546,21 @@ void ProtocolGame::sendMagicEffect(const Position& pos, uint8_t type)
 		return;
 	}
 
-	#if CLIENT_VERSION >= 1203
 	playermsg.reset();
 	playermsg.addByte(0x83);
 	playermsg.addPosition(pos);
-	playermsg.addByte(MAGIC_EFFECTS_CREATE_EFFECT);
-	playermsg.addByte(type);
-	playermsg.addByte(MAGIC_EFFECTS_END_LOOP);
-	writeToOutputBuffer(playermsg);
+
+	#if GAME_FEATURE_SPLITTED_EFFECTS
+		Effect* effect = g_game.effects.getByID(type);
+		if (!effect) {
+			return;
+		}
+		playermsg.addEffect(*effect);
 	#else
-	playermsg.reset();
-	playermsg.addByte(0x83);
-	playermsg.addPosition(pos);
-	playermsg.addByte(type);
-	writeToOutputBuffer(playermsg);
+		playermsg.addByte(type);
 	#endif
+
+	writeToOutputBuffer(playermsg);
 }
 
 void ProtocolGame::sendCreatureHealth(const Creature* creature, uint8_t healthPercent)
@@ -4218,6 +4219,8 @@ void ProtocolGame::sendOutfitWindow()
 		#endif
 	}
 	#endif
+
+	std::cout << mounted << std::endl;
 	
 	#if CLIENT_VERSION >= 1185
 	playermsg.addByte(0x00);//Try outfit
