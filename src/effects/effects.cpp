@@ -1,5 +1,33 @@
 #include "effects.hpp"
 
+std::string Effect::toString() {
+	std::string str;
+	str.reserve(128);
+
+	str.append("Effect '")
+		.append(std::to_string(getId()))
+		.append("' has ")
+		.append(std::to_string(getPieces().size()))
+		.append(" pieces")
+		.append("\n");
+
+	for (auto const& effectPiece : getPieces()) {
+		str.append("\nPiece: ")
+			.append(std::to_string(effectPiece.id))
+			.append("\nOffset: ")
+			.append("x: ").append(std::to_string(effectPiece.offset.x))
+			.append(" y: ").append(std::to_string(effectPiece.offset.y))
+			.append(" z: ").append(std::to_string(effectPiece.offset.z))
+			.append("\nChildren: [ ");
+		
+		for (auto const& childId : effectPiece.childrenIds) {
+			str.append(std::to_string(childId)).append(" ");
+		}
+
+		str.append("]\n");
+	}
+	return str;
+}
 
 Effects::Effects()
 {
@@ -23,39 +51,6 @@ void Effects::load()
 		if (!effectsJSON.is_object()) {
 			effectsJSON = JSONParser::readFromFile(Effects::JSON_FILE_NAME);
 		}
-}
-
-std::string Effects::toString(Effect effect) {
-	std::string str;
-	str.reserve(128);
-
-	str.append("Effect '")
-		.append(std::to_string(effect.getId()))
-		.append("' has ")
-		.append(std::to_string(effect.getPieces().size()))
-		.append(" pieces")
-		.append("\n");
-
-	for (auto const& effectPiece : effect.getPieces()) {
-		str.append("\nPiece: ")
-			.append(std::to_string(effectPiece.id))
-			.append("\nOffset: ")
-			.append("x: ").append(std::to_string(effectPiece.offset.x))
-			.append(" y: ").append(std::to_string(effectPiece.offset.y))
-			.append(" z: ").append(std::to_string(effectPiece.offset.z))
-			.append("\nChildren: [ ");
-		
-		for (auto const& childId : effectPiece.childrenIds) {
-			str.append(std::to_string(childId)).append(" ");
-		}
-
-		str.append("]\n");
-	}
-	return str;
-}
-
-std::string Effects::toString(uint16_t id) {
-	return toString(*getByID(id));
 }
 
 Effect* Effects::getByID(uint16_t id)

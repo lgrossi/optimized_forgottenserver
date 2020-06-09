@@ -18,9 +18,12 @@ class Effect
 	public:
 		uint16_t getId() { return id; }
 		void setId(uint16_t newId) { id = newId; }
+
 		Pieces getPieces() { return pieces; }
 		void addPiece(EffectPiece piece) { pieces.emplace_back(piece); }
 		void clearPieces() { pieces.clear(); }
+
+		std::string toString();
 	
 	private:
 		uint16_t id;
@@ -37,8 +40,6 @@ class Effects
 
 		void reload();
 		void load();
-		std::string toString(Effect effect);
-		std::string toString(uint16_t id);
 		Effect* getByID(uint16_t id);
 		Position getOffsetPos(json offset);
 		
