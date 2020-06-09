@@ -1,13 +1,14 @@
 #include "effects.hpp"
 
+
 Effects::Effects()
 {
-	m_effect.effect = new Effect;
+	m_effect = new Effect;
 }
 
 Effects::~Effects()
 {
-	delete m_effect.effect;
+	delete m_effect;
 }
 
 void Effects::reload()
@@ -28,12 +29,14 @@ std::string Effects::toString(Effect effect) {
 	std::string str;
 	str.reserve(128);
 
-	str.append("This effect has ")
-		.append(std::to_string(effect.size()))
+	str.append("Effect '")
+		.append(std::to_string(effect.getId()))
+		.append("' has ")
+		.append(std::to_string(effect.getPieces().size()))
 		.append(" pieces")
 		.append("\n");
 
-	for (auto const& effectPiece : effect) {
+	for (auto const& effectPiece : effect.getPieces()) {
 		str.append("\nPiece: ")
 			.append(std::to_string(effectPiece.id))
 			.append("\nOffset: ")
@@ -51,27 +54,29 @@ std::string Effects::toString(Effect effect) {
 	return str;
 }
 
-std::string Effects::toString(std::string id) {
+std::string Effects::toString(uint16_t id) {
 	return toString(*getByID(id));
 }
 
-Effect* Effects::getByID(std::string id)
+Effect* Effects::getByID(uint16_t id)
 {
-	if (m_effect.id == id) return m_effect.effect;
+	if (m_effect->getId() == id) return m_effect;
 
-	if (!JSONParser::isKeySafe(effectsJSON, id)) {
+	std::string strId = std::to_string(id);
+	if (!JSONParser::isKeySafe(effectsJSON, strId)) {
 		std::cout << "ERROR: Malformed effect attributes - effect must be an object with valid id!" << std::endl;
 		return nullptr;
 	}
 
-	json effectJSON = effectsJSON[id];
+	json effectJSON = effectsJSON[strId];
 	if (!effectJSON.is_array() || effectJSON.size() <= 0) {
-		std::cout << "ERROR: Malformed effect with ID: " << id << " - must be a populated array!" << std::endl;
+		std::cout << "ERROR: Malformed effect with ID: " << strId << " - must be a populated array!" << std::endl;
 		return nullptr;
 	}
 
-	m_effect.id = id;
-	m_effect.effect->clear();
+	m_effect->setId(id);
+	m_effect->clearPieces();
+	std::cout << m_effect->getId() << std::endl;
 
 	for (auto const& effectPieceJSON : effectJSON) {
 		if (!JSONParser::isKeySafe(effectPieceJSON, "id") || !effectPieceJSON["id"].is_number()) {
@@ -88,14 +93,14 @@ Effect* Effects::getByID(std::string id)
 			std::cout << "ERROR: Invalid effectPiece offset - offset must be an object {x, y, z}!" << std::endl;
 			return nullptr;
 		}
-		m_effect.effect->emplace_back(EffectPiece{
+		m_effect->addPiece(EffectPiece{
 			effectPieceJSON["id"],
 			getOffsetPos(effectPieceJSON["offset"]),
 			effectPieceJSON["childrenIds"]
 		});
 	}
 
-	return m_effect.effect;
+	return m_effect;
 }
 
 Position Effects::getOffsetPos(json offset) {

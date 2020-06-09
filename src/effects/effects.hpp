@@ -11,14 +11,21 @@ struct EffectPiece
 	Position offset;
 	std::vector<uint16_t> childrenIds;
 };
+using Pieces = std::vector<EffectPiece>;
 
-struct _Effect
+class Effect
 {
-	std::string id;
-	std::vector<EffectPiece>* effect;
+	public:
+		uint16_t getId() { return id; }
+		void setId(uint16_t newId) { id = newId; }
+		Pieces getPieces() { return pieces; }
+		void addPiece(EffectPiece piece) { pieces.emplace_back(piece); }
+		void clearPieces() { pieces.clear(); }
+	
+	private:
+		uint16_t id;
+		Pieces pieces;
 };
-
-using Effect = std::vector<EffectPiece>;
 
 class Effects
 {
@@ -31,8 +38,8 @@ class Effects
 		void reload();
 		void load();
 		std::string toString(Effect effect);
-		std::string toString(std::string id);
-		Effect* getByID(std::string id);
+		std::string toString(uint16_t id);
+		Effect* getByID(uint16_t id);
 		Position getOffsetPos(json offset);
 		
 		const json& getEffectsJSON() const {
@@ -41,7 +48,7 @@ class Effects
 
 	private:
 		json effectsJSON;
-		_Effect m_effect;
+		Effect* m_effect;
 };
 
 #endif
