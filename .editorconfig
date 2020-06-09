@@ -8,6 +8,11 @@ indent_style = tab
 insert_final_newline = true
 trim_trailing_whitespace = true
 
+# Google Style
+[*.{cpp,hpp,h,sql,lua,xml,json}]
+indent_style = space
+indent_size = 2
+
 [**.{.cpp,.h}]
 # Options not ubiquitous, but useful
 indent_brace_style = K&R
