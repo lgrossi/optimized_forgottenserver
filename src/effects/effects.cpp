@@ -39,22 +39,10 @@ Effects::~Effects()
 	delete m_effect;
 }
 
-void Effects::reload()
-{
-	effectsJSON.clear();
-	load();
-}
-
-void Effects::load()
-{
-		// cache effects JSON file
-		if (!effectsJSON.is_object()) {
-			effectsJSON = JSONParser::readFromFile(Effects::JSON_FILE_NAME);
-		}
-}
-
 Effect* Effects::getByID(uint16_t id)
 {
+	if (initFailed()) return nullptr;
+
 	if (m_effect->getId() == id) return m_effect;
 
 	std::string strId = std::to_string(id);
@@ -99,9 +87,40 @@ Effect* Effects::getByID(uint16_t id)
 }
 
 Position Effects::getOffsetPos(json offset) {
+	if (initFailed()) return Position(0, 0, 0);
+
 	offset["x"] = offset["x"].is_number() ? offset["x"] : "0"_json;
 	offset["y"] = offset["y"].is_number() ? offset["y"] : "0"_json;
 	offset["z"] = offset["z"].is_number() ? offset["z"] : "0"_json;
 
 	return Position(offset["x"], offset["y"], offset["z"]);
 };
+
+bool Effects::initFailed() {
+	if (!effectsJSON.is_object()) {
+		std::cout << "ERROR: JSON file was not properly loaded. Unable to perform any effect operation." << std::endl;
+		return true;
+	}
+	return false;
+}
+
+void Effects::load()
+{
+		// cache effects JSON file
+		if (!effectsJSON.is_object()) {
+			effectsJSON = JSONParser::readFromFile(Effects::JSON_FILE_NAME);
+		}
+}
+
+void Effects::loadFromPath(std::string path)
+{
+	// no cache here since the file can always change
+	effectsJSON.clear();
+	effectsJSON = JSONParser::readFromFile(path, false);
+}
+
+void Effects::reload()
+{
+	effectsJSON.clear();
+	load();
+}

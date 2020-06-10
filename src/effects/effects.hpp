@@ -37,17 +37,19 @@ class Effects
 		~Effects();
 
 		static constexpr const char* JSON_FILE_NAME = "effects";
-
-		void reload();
-		void load();
-		Effect* getByID(uint16_t id);
-		Position getOffsetPos(json offset);
-		
 		const json& getEffectsJSON() const {
 			return effectsJSON;
 		}
 
+		Effect* getByID(uint16_t id);
+		Position getOffsetPos(json offset);
+		void load();
+		void loadFromPath(std::string path);
+		void reload();
+
 	private:
+		bool initFailed();
+
 		json effectsJSON;
 		Effect* m_effect;
 };
