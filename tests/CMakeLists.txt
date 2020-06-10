@@ -1,17 +1,25 @@
 cmake_minimum_required(VERSION 3.0)
 
-project(cmake_test)
+project(tfs_tests)
+
+set(CMAKE_CXX_FLAGS     "-pipe -O0 -g -Wno-everything -std=c++11 -lstdc++ -lpthread -ldl")
+
+
+include_directories(${MYSQL_INCLUDE_DIR} ${LUA_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} ${PUGIXML_INCLUDE_DIR} ${GMP_INCLUDE_DIR} ${ZLIB_INCLUDE_DIR})
 
 # Prepare "Catch" library for other executables
-set(CATCH_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/catch)
+set(CATCH_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/catch)
 add_library(Catch INTERFACE)
 target_include_directories(Catch INTERFACE ${CATCH_INCLUDE_DIR})
 
-set(TEST_SOURCES
-	${CMAKE_CURRENT_LIST_DIR}/main.cpp
-	${CMAKE_CURRENT_LIST_DIR}/first_test.cpp
-)
+add_subdirectory(src)
 
 # Make test executable
-add_executable(tests ${TEST_SOURCES} )
-target_link_libraries(tests Catch ${Boost_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY})
+add_executable(tfs_tests ${test_SRC})
+
+target_compile_definitions(tfs_tests PUBLIC -DUNIT_TESTING -DDEBUG_LOG)
+
+target_link_libraries(tfs_tests Catch tfs_lib nlohmann_json ${MYSQL_CLIENT_LIBS}  
+  ${LUA_LIBRARIES} ${Boost_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY} ${PUGIXML_LIBRARIES} 
+  ${GMP_LIBRARIES} ${ZLIB_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
+

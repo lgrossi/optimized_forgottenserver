@@ -2,11 +2,10 @@
 
 # sudo docker-compose down --rmi all -v --remove-orphans
 # sudo docker-compose up --build -d
-cd ..
-sudo mkdir build
 cd build
 sudo cmake -DPACKAGE_TESTS=On .. ; make -j`nproc`
-./tests/tests --reporter compact --success -d yes
-sudo cd  ..
-sudo cd tests
+cp tests/tfs_tests ../tests/src
+cd ../tests/src
+./tfs_tests --reporter compact --success -d yes
+cd ../..
 # sudo docker-compose down --rmi all -v --remove-orphans

@@ -16,9 +16,22 @@ class JSONParser
 		static constexpr const char* JSON_PATH = "data/JSON/";
 		static constexpr const char* JSON_FORMAT = ".json";
 
-    static json readFromFile(std::string fileName) {
+		static std::string generateFilePath(std::string filename, bool addPath = true) {
+			std::string str;
+			str.reserve(128);
+			if (addPath) str.append(JSONParser::JSON_PATH);
+			return str.append(filename).append(JSONParser::JSON_FORMAT);
+		}
+
+		static bool isKeySafe(json j, std::string key) {
+			return j.is_object() && j.find(key) != j.end();
+		}
+
+    static json readFromFile(std::string filename, bool addPath = true) {
+			const std::string path = JSONParser::generateFilePath(filename, addPath);
+
 			try {
-				std::ifstream ifStream(JSONParser::generateFilePath(fileName));
+				std::ifstream ifStream(path);
 				json j = json::parse(ifStream);
 				ifStream.close();
 				return j;
@@ -27,24 +40,12 @@ class JSONParser
 				std::string str;
 				str.reserve(128);
 				str.append("Error - JSONParser::readFromFile ")
-					.append(JSON_PATH)
-					.append(fileName)
-					.append(JSON_FORMAT)
-					.append(" not found.");
+					.append(path)
+					.append(" not found or malformed.");
 				std::cerr << str << std::endl;
 				return json();
 			}
 		};
-
-		static std::string generateFilePath(std::string fileName) {
-			std::string str;
-			str.reserve(128);
-			return str.append(JSONParser::JSON_PATH).append(fileName).append(JSONParser::JSON_FORMAT);
-		}
-
-		static bool isKeySafe(json j, std::string key) {
-			return j.is_object() && j.find(key) != j.end();
-		}
 
 	private:
 		
