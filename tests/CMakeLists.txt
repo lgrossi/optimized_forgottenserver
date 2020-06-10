@@ -1,9 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 
 project(tfs_tests)
-
-set(CMAKE_CXX_FLAGS     "-pipe -O0 -g -Wno-everything -std=c++11 -lstdc++ -lpthread -ldl")
-
+set(CMAKE_CXX_FLAGS "-pipe -O0 -g -Wno-everything -std=c++11 -lstdc++ -lpthread -ldl")
 
 include_directories(${MYSQL_INCLUDE_DIR} ${LUA_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} ${PUGIXML_INCLUDE_DIR} ${GMP_INCLUDE_DIR} ${ZLIB_INCLUDE_DIR})
 
