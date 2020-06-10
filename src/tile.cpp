@@ -456,16 +456,13 @@ void Tile::onRemoveTileItem(const SpectatorVector& spectators, const std::vector
 	const Position& cylinderMapPos = getPosition();
 	const ItemType& iType = Item::items[item->getID()];
 
-	//send to client
-	size_t i = 0;
+	//send to client + event method
+	size_t i = static_cast<size_t>(-1); //Start index at -1 to avoid copying it
 	for (Creature* spectator : spectators) {
 		if (Player* tmpPlayer = spectator->getPlayer()) {
-			tmpPlayer->sendRemoveTileThing(cylinderMapPos, oldStackPosVector[i++]);
+			tmpPlayer->sendRemoveTileThing(cylinderMapPos, oldStackPosVector[++i]);
 		}
-	}
 
-	//event methods
-	for (Creature* spectator : spectators) {
 		spectator->onRemoveTileItem(this, cylinderMapPos, iType, item);
 	}
 }
@@ -1078,13 +1075,14 @@ void Tile::removeThing(Thing* thing, uint32_t count)
 			return;
 		}
 
-		std::vector<int32_t> oldStackPosVector;
-
 		SpectatorVector spectators;
 		g_game.map.getSpectators(spectators, getPosition(), true);
+
+		std::vector<int32_t> oldStackPosVector(spectators.size());
+		size_t i = static_cast<size_t>(-1); //Start index at -1 to avoid copying it
 		for (Creature* spectator : spectators) {
 			if (Player* tmpPlayer = spectator->getPlayer()) {
-				oldStackPosVector.push_back(getStackposOfItem(tmpPlayer, item));
+				oldStackPosVector[++i] = getStackposOfItem(tmpPlayer, item);
 			}
 		}
 
@@ -1103,13 +1101,14 @@ void Tile::removeThing(Thing* thing, uint32_t count)
 			item->setItemCount(newCount);
 			onUpdateTileItem(item, itemType, item, itemType);
 		} else {
-			std::vector<int32_t> oldStackPosVector;
-
 			SpectatorVector spectators;
 			g_game.map.getSpectators(spectators, getPosition(), true);
+
+			std::vector<int32_t> oldStackPosVector(spectators.size());
+			size_t i = static_cast<size_t>(-1); //Start index at -1 to avoid copying it
 			for (Creature* spectator : spectators) {
 				if (Player* tmpPlayer = spectator->getPlayer()) {
-					oldStackPosVector.push_back(getStackposOfItem(tmpPlayer, item));
+					oldStackPosVector[++i] = getStackposOfItem(tmpPlayer, item);
 				}
 			}
 
@@ -1122,7 +1121,7 @@ void Tile::removeThing(Thing* thing, uint32_t count)
 
 void Tile::removeCreature(Creature* creature)
 {
-	g_game.map.getQTNode(tilePos.x, tilePos.y)->removeCreature(creature);
+	g_game.map.getMapSector(tilePos.x, tilePos.y)->removeCreature(creature);
 	removeThing(creature, 0);
 }
 
@@ -1514,6 +1513,10 @@ void Tile::setTileFlags(const Item* item)
 		setFlag(TILESTATE_IMMOVABLENOFIELDBLOCKPATH);
 	}
 
+	if (item->hasProperty(CONST_PROP_BLOCKPROJECTILE)) {
+		setFlag(TILESTATE_BLOCKPROJECTILE);
+	}
+
 	if (item->getTeleport()) {
 		setFlag(TILESTATE_TELEPORT);
 	}
@@ -1555,28 +1558,115 @@ void Tile::resetTileFlags(const Item* item)
 		resetFlag(TILESTATE_FLOORCHANGE);
 	}
 
-	if (item->hasProperty(CONST_PROP_BLOCKSOLID) && !hasProperty(item, CONST_PROP_BLOCKSOLID)) {
+	#define checkLoop																																			\
+	do {																																						\
+		if ((blockSolid | immovableBlockSolid | blockPath | noFieldBlockPath | immovableBlockPath | immovableNoFieldBlockPath | blockProjectile) == false) {	\
+			break;																																				\
+		}																																						\
+	} while(0)
+
+	bool blockSolid = item->hasProperty(CONST_PROP_BLOCKSOLID);
+	bool immovableBlockSolid = item->hasProperty(CONST_PROP_IMMOVABLEBLOCKSOLID);
+	bool blockPath = item->hasProperty(CONST_PROP_BLOCKPATH);
+	bool noFieldBlockPath = item->hasProperty(CONST_PROP_NOFIELDBLOCKPATH);
+	bool immovableBlockPath = item->hasProperty(CONST_PROP_IMMOVABLEBLOCKPATH);
+	bool immovableNoFieldBlockPath = item->hasProperty(CONST_PROP_IMMOVABLENOFIELDBLOCKPATH);
+	bool blockProjectile = item->hasProperty(CONST_PROP_BLOCKPROJECTILE);
+	if ((blockSolid | immovableBlockSolid | blockPath | noFieldBlockPath | immovableBlockPath | immovableNoFieldBlockPath | blockProjectile) != false) {
+		if (ground && item != ground) {
+			if (blockSolid && ground->hasProperty(CONST_PROP_BLOCKSOLID)) {
+				blockSolid = false;
+				checkLoop;
+			}
+			if (immovableBlockSolid && ground->hasProperty(CONST_PROP_IMMOVABLEBLOCKSOLID)) {
+				immovableBlockSolid = false;
+				checkLoop;
+			}
+			if (blockPath && ground->hasProperty(CONST_PROP_BLOCKPATH)) {
+				blockPath = false;
+				checkLoop;
+			}
+			if (noFieldBlockPath && ground->hasProperty(CONST_PROP_NOFIELDBLOCKPATH)) {
+				noFieldBlockPath = false;
+				checkLoop;
+			}
+			if (immovableBlockPath && ground->hasProperty(CONST_PROP_IMMOVABLEBLOCKPATH)) {
+				immovableBlockPath = false;
+				checkLoop;
+			}
+			if (immovableNoFieldBlockPath && ground->hasProperty(CONST_PROP_IMMOVABLENOFIELDBLOCKPATH)) {
+				immovableNoFieldBlockPath = false;
+				checkLoop;
+			}
+			if (blockProjectile && ground->hasProperty(CONST_PROP_BLOCKPROJECTILE)) {
+				blockProjectile = false;
+				checkLoop;
+			}
+		}
+
+		if (const TileItemVector* items = getItemList()) {
+			for (const Item* checkItem : *items) {
+				if (item != checkItem) {
+					if (blockSolid && checkItem->hasProperty(CONST_PROP_BLOCKSOLID)) {
+						blockSolid = false;
+						checkLoop;
+					}
+					if (immovableBlockSolid && checkItem->hasProperty(CONST_PROP_IMMOVABLEBLOCKSOLID)) {
+						immovableBlockSolid = false;
+						checkLoop;
+					}
+					if (blockPath && checkItem->hasProperty(CONST_PROP_BLOCKPATH)) {
+						blockPath = false;
+						checkLoop;
+					}
+					if (noFieldBlockPath && checkItem->hasProperty(CONST_PROP_NOFIELDBLOCKPATH)) {
+						noFieldBlockPath = false;
+						checkLoop;
+					}
+					if (immovableBlockPath && checkItem->hasProperty(CONST_PROP_IMMOVABLEBLOCKPATH)) {
+						immovableBlockPath = false;
+						checkLoop;
+					}
+					if (immovableNoFieldBlockPath && checkItem->hasProperty(CONST_PROP_IMMOVABLENOFIELDBLOCKPATH)) {
+						immovableNoFieldBlockPath = false;
+						checkLoop;
+					}
+					if (blockProjectile && checkItem->hasProperty(CONST_PROP_BLOCKPROJECTILE)) {
+						blockProjectile = false;
+						checkLoop;
+					}
+				}
+			}
+		}
+	}
+	#undef checkLoop
+
+	if (blockSolid) {
 		resetFlag(TILESTATE_BLOCKSOLID);
 	}
 
-	if (item->hasProperty(CONST_PROP_IMMOVABLEBLOCKSOLID) && !hasProperty(item, CONST_PROP_IMMOVABLEBLOCKSOLID)) {
+	if (immovableBlockSolid) {
 		resetFlag(TILESTATE_IMMOVABLEBLOCKSOLID);
 	}
 
-	if (item->hasProperty(CONST_PROP_BLOCKPATH) && !hasProperty(item, CONST_PROP_BLOCKPATH)) {
+	if (blockPath) {
 		resetFlag(TILESTATE_BLOCKPATH);
 	}
 
-	if (item->hasProperty(CONST_PROP_NOFIELDBLOCKPATH) && !hasProperty(item, CONST_PROP_NOFIELDBLOCKPATH)) {
+	if (noFieldBlockPath) {
 		resetFlag(TILESTATE_NOFIELDBLOCKPATH);
 	}
 
-	if (item->hasProperty(CONST_PROP_IMMOVABLEBLOCKPATH) && !hasProperty(item, CONST_PROP_IMMOVABLEBLOCKPATH)) {
+	if (immovableBlockPath) {
 		resetFlag(TILESTATE_IMMOVABLEBLOCKPATH);
 	}
 
-	if (item->hasProperty(CONST_PROP_IMMOVABLENOFIELDBLOCKPATH) && !hasProperty(item, CONST_PROP_IMMOVABLENOFIELDBLOCKPATH)) {
+	if (immovableNoFieldBlockPath) {
 		resetFlag(TILESTATE_IMMOVABLENOFIELDBLOCKPATH);
+	}
+
+	if (blockProjectile) {
+		resetFlag(TILESTATE_BLOCKPROJECTILE);
 	}
 
 	if (item->getTeleport()) {
