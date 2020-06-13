@@ -48,7 +48,7 @@ class Effects
 		void reload();
 
 	private:
-		bool initFailed();
+		bool initialized();
 
 		json effectsJSON;
 		Effect* m_effect;

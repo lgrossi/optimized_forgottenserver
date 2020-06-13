@@ -41,7 +41,7 @@ Effects::~Effects()
 
 Effect* Effects::getByID(uint16_t id)
 {
-	if (initFailed()) return nullptr;
+	if (!initialized()) return nullptr;
 
 	if (m_effect->getId() == id) return m_effect;
 
@@ -87,7 +87,7 @@ Effect* Effects::getByID(uint16_t id)
 }
 
 Position Effects::getOffsetPos(json offset) {
-	if (initFailed()) return Position(0, 0, 0);
+	if (!initialized()) return Position(0, 0, 0);
 
 	offset["x"] = offset["x"].is_number() ? offset["x"] : "0"_json;
 	offset["y"] = offset["y"].is_number() ? offset["y"] : "0"_json;
@@ -96,12 +96,12 @@ Position Effects::getOffsetPos(json offset) {
 	return Position(offset["x"], offset["y"], offset["z"]);
 };
 
-bool Effects::initFailed() {
+bool Effects::initialized() {
 	if (!effectsJSON.is_object()) {
-		std::cout << "ERROR: JSON file was not properly loaded. Unable to perform any effect operation." << std::endl;
-		return true;
+		std::cout << "ERROR: Effects JSON file was not properly loaded. Unable to perform any effect operation." << std::endl;
+		return false;
 	}
-	return false;
+	return true;
 }
 
 void Effects::load()
