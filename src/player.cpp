@@ -93,7 +93,7 @@ Player::~Player()
 	setEditHouse(nullptr);
 }
 
-bool Player::setVocation(uint16_t vocId)
+bool Player::setVocation(uint16_t vocId, bool internal /*=false*/)
 {
 	Vocation* voc = g_vocations.getVocation(vocId);
 	if (!voc) {
@@ -108,9 +108,11 @@ bool Player::setVocation(uint16_t vocId)
 		condition->setParam(CONDITION_PARAM_MANAGAIN, vocation->getManaGainAmount());
 		condition->setParam(CONDITION_PARAM_MANATICKS, vocation->getManaGainTicks() * 1000);
 	}
-	#if CLIENT_VERSION >= 950
-	sendBasicData();
-	#endif
+	if (!internal) {
+		#if CLIENT_VERSION >= 950
+		sendBasicData();
+		#endif
+	}
 	return true;
 }
 
@@ -1063,7 +1065,15 @@ void Player::sendUpdateContainerItem(const Container* container, uint8_t slot, c
 		client->sendUpdateContainerItem(it.first, slot, newItem);
 		#endif
 		#if GAME_FEATURE_INVENTORY_LIST > 0
-		addScheduledUpdates(PlayerUpdate_Inventory);
+		if (shopOwner) {
+			addScheduledUpdates(PlayerUpdate_Inventory | PlayerUpdate_Sale);
+		} else {
+			addScheduledUpdates(PlayerUpdate_Inventory);
+		}
+		#else
+		if (shopOwner) {
+			addScheduledUpdates(PlayerUpdate_Sale);
+		}
 		#endif
 		return;
 	}
@@ -2879,7 +2889,15 @@ void Player::updateThing(Thing* thing, uint16_t itemId, uint32_t count)
 	onUpdateInventoryItem(item, item);
 	
 	#if GAME_FEATURE_INVENTORY_LIST > 0
-	addScheduledUpdates(PlayerUpdate_Inventory);
+	if (shopOwner) {
+		addScheduledUpdates(PlayerUpdate_Inventory | PlayerUpdate_Sale);
+	} else {
+		addScheduledUpdates(PlayerUpdate_Inventory);
+	}
+	#else
+	if (shopOwner) {
+		addScheduledUpdates(PlayerUpdate_Sale);
+	}
 	#endif
 }
 
@@ -2906,7 +2924,15 @@ void Player::replaceThing(uint32_t index, Thing* thing)
 	onUpdateInventoryItem(oldItem, item);
 	
 	#if GAME_FEATURE_INVENTORY_LIST > 0
-	addScheduledUpdates(PlayerUpdate_Inventory);
+	if (shopOwner) {
+		addScheduledUpdates(PlayerUpdate_Inventory | PlayerUpdate_Sale);
+	} else {
+		addScheduledUpdates(PlayerUpdate_Inventory);
+	}
+	#else
+	if (shopOwner) {
+		addScheduledUpdates(PlayerUpdate_Sale);
+	}
 	#endif
 
 	item->setParent(this);
@@ -3318,7 +3344,7 @@ bool Player::setAttackedCreature(Creature* creature)
 	}
 
 	if (creature) {
-		g_dispatcher.addTask(createTask(std::bind(&Game::checkCreatureAttack, &g_game, getID())));
+		g_dispatcher.addTask(std::bind(&Game::checkCreatureAttack, &g_game, getID()));
 	}
 	return true;
 }
@@ -4765,8 +4791,7 @@ void Player::addScheduledUpdates(uint32_t flags)
 {
 	scheduledUpdates |= flags;
 	if (!scheduledUpdate) {
-		//To make it work even better it's possible to use slightly delayed scheduler task so it'll cache even more updates at once
-		g_dispatcher.addTask(createTask(std::bind(&Game::updatePlayerEvent, &g_game, getID())));
+		g_scheduler.addEvent(createSchedulerTask(SCHEDULER_MINTICKS, std::bind(&Game::updatePlayerEvent, &g_game, getID())));
 		scheduledUpdate = true;
 	}
 }

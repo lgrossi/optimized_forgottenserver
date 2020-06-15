@@ -29,7 +29,20 @@ class Npc;
 
 struct spawnBlock_t
 {
-	spawnBlock_t(MonsterType* mType, uint32_t interval, Position pos, Direction direction) : mType(mType), interval(interval), pos(std::move(pos)), direction(direction) {}
+	spawnBlock_t(MonsterType* mType, uint32_t interval, Position pos, Direction direction) :
+		mType(mType), interval(interval), pos(std::move(pos)), direction(direction) {}
+
+	// non-copyable
+	spawnBlock_t(const spawnBlock_t&) = delete;
+	spawnBlock_t& operator=(const spawnBlock_t&) = delete;
+
+	// moveable
+	spawnBlock_t(spawnBlock_t&& rhs) noexcept :
+		monster(rhs.monster), mType(rhs.mType), lastSpawn(rhs.lastSpawn), interval(rhs.interval), pos(std::move(rhs.pos)), direction(rhs.direction) {
+		rhs.monster = nullptr;
+		rhs.mType = nullptr;
+	}
+	spawnBlock_t& operator=(const spawnBlock_t&&) = delete;
 
 	Monster* monster = nullptr;
 	MonsterType* mType;
@@ -50,21 +63,19 @@ class Spawn
 		Spawn& operator=(const Spawn&) = delete;
 
 		// moveable
-		Spawn(Spawn&& rhs) noexcept {
-			this->spawnMap = std::move(rhs.spawnMap);
-			this->centerPos = std::move(rhs.centerPos);
-			this->interval = rhs.interval;
-			this->checkSpawnEvent = rhs.checkSpawnEvent;
-		}
+		Spawn(Spawn&& rhs) noexcept : spawnMap(std::move(rhs.spawnMap)),
+			checkSpawnEvent(rhs.checkSpawnEvent), centerPos(std::move(rhs.centerPos)), interval(rhs.interval) {}
 		Spawn& operator=(Spawn&& rhs) noexcept {
-			this->spawnMap = std::move(rhs.spawnMap);
-			this->centerPos = std::move(rhs.centerPos);
-			this->interval = rhs.interval;
-			this->checkSpawnEvent = rhs.checkSpawnEvent;
+			if (this != &rhs) {
+				spawnMap = std::move(rhs.spawnMap);
+				checkSpawnEvent = rhs.checkSpawnEvent;
+				centerPos = std::move(rhs.centerPos);
+				interval = rhs.interval;
+			}
 			return *this;
 		}
 
-		void scheduleSpawn(size_t spawnId, int32_t interval);
+		void scheduleSpawn(uint32_t spawnId, int32_t interval);
 		bool addMonster(const std::string& name, const Position& pos, Direction dir, uint32_t interval);
 		void removeMonster(Monster* monster);
 
@@ -79,11 +90,11 @@ class Spawn
 	private:
 		//map of creatures in the spawn
 		std::vector<spawnBlock_t> spawnMap;
-		size_t spawnIndex = 0;
+		uint64_t checkSpawnEvent = 0;
 
 		Position centerPos;
 		uint32_t interval = 60000;
-		uint32_t checkSpawnEvent = 0;
+		uint32_t spawnIndex = 0;
 
 		static bool findPlayer(const Position& pos);
 		bool spawnMonster(spawnBlock_t& sb, bool startup = false);

@@ -3925,8 +3925,11 @@ int LuaScriptInterface::luaAddEvent(lua_State* L)
 	}
 
 	LuaTimerEventDesc eventDesc;
-	for (int i = 0; i < parameters - 2; ++i) { //-2 because addEvent needs at least two parameters
-		eventDesc.parameters.push_back(luaL_ref(globalState, LUA_REGISTRYINDEX));
+	if (parameters > 2) {
+		eventDesc.parameters.resize(static_cast<size_t>(parameters - 2));
+		for (int i = 0; i < parameters - 2; ++i) { //-2 because addEvent needs at least two parameters
+			eventDesc.parameters[i] = luaL_ref(globalState, LUA_REGISTRYINDEX);
+		}
 	}
 
 	uint32_t delay = std::max<uint32_t>(100, getNumber<uint32_t>(globalState, 2));
@@ -4513,7 +4516,7 @@ int LuaScriptInterface::luaGameLoadMap(lua_State* L)
 {
 	// Game.loadMap(path)
 	const std::string& path = getString(L, 1);
-	g_dispatcher.addTask(createTask([path]() {
+	g_dispatcher.addTask([path]() {
 		try {
 			g_game.loadMap(path);
 		} catch (const std::exception& e) {
@@ -4521,7 +4524,7 @@ int LuaScriptInterface::luaGameLoadMap(lua_State* L)
 			std::cout << "[Error - LuaScriptInterface::luaGameLoadMap] Failed to load map: "
 				<< e.what() << std::endl;
 		}
-	}));
+	});
 	return 0;
 }
 
