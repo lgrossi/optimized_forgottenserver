@@ -1,0 +1,26 @@
+{
+  "123": [{
+      "id": 1,
+      "childrenIds": [1, 2, 3, 4, 5],
+      "offset": { "x": 1, "y": 1 }
+    },{
+      "id": 2,
+      "childrenIds": [2, 4, 6, 8, 10],
+      "offset": { "x": 2, "y": 2 }
+    },{
+      "id": 3,
+      "childrenIds": [3, 6, 9, 12, 15],
+      "offset": { "x": 3, "y": 3 }
+    },{
+      "id": 4,
+      "childrenIds": [4, 8, 12, 16, 20],
+      "offset": { "x": 4, "y": 4 }
+    }
+  ],
+  "12": [{
+      "id": 2,
+      "childrenIds": [1, 2, 3, 4, 5],
+      "offset": { }
+    }
+  ]
+}

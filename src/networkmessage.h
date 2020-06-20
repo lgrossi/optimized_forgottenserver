@@ -21,6 +21,7 @@
 #define FS_NETWORKMESSAGE_H_B853CFED58D1413A87ACED07B2926E03
 
 #include "const.h"
+#include "effects/effects.hpp"
 
 class Item;
 class Creature;
@@ -150,6 +151,9 @@ class NetworkMessage
 			info.position = 2;
 			return buffer + HEADER_LENGTH;
 		}
+
+		void addEffect(Effect effect);
+		Effect getEffect();
 
 	protected:
 		struct NetworkMessageInfo {

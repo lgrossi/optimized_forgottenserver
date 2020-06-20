@@ -45,12 +45,25 @@ else()
 endif()
 
 find_package(Boost 1.53.0 COMPONENTS system filesystem iostreams REQUIRED)
+find_package(nlohmann_json REQUIRED)
 
 add_subdirectory(src)
-add_executable(tfs ${tfs_SRC})
+add_executable(tfs ${CMAKE_CURRENT_SOURCE_DIR}/src/otserv.cpp)
+
+# *****************************************************************************
+# Tests
+# *****************************************************************************
+
+add_library(tfs_lib ${tfs_SRC})
+
+option(PACKAGE_TESTS "Build the tests" OFF)
+if(PACKAGE_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
 
 include_directories(${MYSQL_INCLUDE_DIR} ${LUA_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} ${PUGIXML_INCLUDE_DIR} ${GMP_INCLUDE_DIR} ${ZLIB_INCLUDE_DIR})
-target_link_libraries(tfs ${MYSQL_CLIENT_LIBS} ${LUA_LIBRARIES} ${Boost_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY} ${PUGIXML_LIBRARIES} ${GMP_LIBRARIES} ${ZLIB_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(tfs tfs_lib ${MYSQL_CLIENT_LIBS} ${LUA_LIBRARIES} ${Boost_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY} ${PUGIXML_LIBRARIES} ${GMP_LIBRARIES} ${ZLIB_LIBRARY} ${CMAKE_THREAD_LIBS_INIT} nlohmann_json)
 
 set_target_properties(tfs PROPERTIES COTIRE_CXX_PREFIX_HEADER_INIT "src/otpch.h")
 set_target_properties(tfs PROPERTIES COTIRE_ADD_UNITY_BUILD FALSE)

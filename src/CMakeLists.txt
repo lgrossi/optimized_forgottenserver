@@ -45,7 +45,6 @@ set(tfs_SRC
 	${CMAKE_CURRENT_LIST_DIR}/movement.cpp
 	${CMAKE_CURRENT_LIST_DIR}/networkmessage.cpp
 	${CMAKE_CURRENT_LIST_DIR}/npc.cpp
-	${CMAKE_CURRENT_LIST_DIR}/otserv.cpp
 	${CMAKE_CURRENT_LIST_DIR}/outfit.cpp
 	${CMAKE_CURRENT_LIST_DIR}/outputmessage.cpp
 	${CMAKE_CURRENT_LIST_DIR}/party.cpp
@@ -77,5 +76,7 @@ set(tfs_SRC
 	${CMAKE_CURRENT_LIST_DIR}/waitlist.cpp
 	${CMAKE_CURRENT_LIST_DIR}/weapons.cpp
 	${CMAKE_CURRENT_LIST_DIR}/wildcardtree.cpp
+	${CMAKE_CURRENT_LIST_DIR}/effects/effects.cpp
+	${CMAKE_CURRENT_LIST_DIR}/parsers/jsonparser.hpp
 	PARENT_SCOPE)
 
